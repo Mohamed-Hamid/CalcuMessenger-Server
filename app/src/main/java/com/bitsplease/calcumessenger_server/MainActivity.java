@@ -97,29 +97,6 @@ public class MainActivity extends Activity {
             e.printStackTrace();
         }
 
-        String test = "Hello world!";
-        /*
-        try {
-            String ans = EncryptionUtil.signData(test);
-            boolean right = EncryptionUtil.verifyData(test, ans);
-            Log.w("YES", "*_*"+right);
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        } catch (UnrecoverableEntryException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
-        } catch (SignatureException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (CertificateException e) {
-            e.printStackTrace();
-        }
-        */
-
         Thread cThread = new Thread(new ServerThread());
         cThread.start();
 
@@ -213,8 +190,6 @@ public class MainActivity extends Activity {
                     //encryt symmetric key with his public key
                     String keyEncryptedWithPublicKey = EncryptionUtil.encryptDataPublicKey(secretKeyString, key);
 
-                    //Log.w("YES", "OOH = "+ keyEncryptedWithPublicKey);
-
                     //encrypt object contents using my private key
                     String keyEncryptedWithPublicKeyAndPrivateKey = EncryptionUtil.signDataPrivateKey(keyEncryptedWithPublicKey);
 
@@ -223,10 +198,6 @@ public class MainActivity extends Activity {
 
                     Log.w("YES", "0- PLAIN TEXT = " + messageBundle.getPlainText());
                     Log.w("YES", "0- SIGNED TEXT = " + messageBundle.getSignedText());
-
-                    boolean isVerified = EncryptionUtil.verifyData(messageBundle.getPlainText(), messageBundle.getSignedText(), EncryptionUtil.getPublicKey());
-
-                    Log.w("YES", "*_*"+ isVerified);
 
                     output.writeObject(messageBundle);
                     output.flush();
