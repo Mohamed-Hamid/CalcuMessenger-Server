@@ -67,8 +67,7 @@ public class MainActivity extends Activity {
         sendMessage = (Button) findViewById(R.id.send_button);
         listViewMessages = (ListView) findViewById(R.id.list_view_messages);
 
-        senderName = "Mohamed";
-        receiverName = "Samy";
+        receiverName = "You";
 
         listMessages = new ArrayList<Message>();
 
@@ -129,7 +128,7 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 if (enterMessage.getText().toString() != ""){
                     sendData( enterMessage.getText().toString() );
-                    displayMessage( new Message(enterMessage.getText().toString(), senderName, true) );
+                    displayMessage( new Message(enterMessage.getText().toString(), receiverName, true) );
                     enterMessage.setText("");
                 }
             }
@@ -211,7 +210,25 @@ public class MainActivity extends Activity {
 
                     Log.w("YES", "THE SENT AES SECRET KEY = "+ secretKeyString);
 
-                    output.writeObject(secretKeyString);
+                    //encryt symmetric key with his public key
+                    String keyEncryptedWithPublicKey = EncryptionUtil.encryptDataPublicKey(secretKeyString, key);
+
+                    //Log.w("YES", "OOH = "+ keyEncryptedWithPublicKey);
+
+                    //encrypt object contents using my private key
+                    String keyEncryptedWithPublicKeyAndPrivateKey = EncryptionUtil.signDataPrivateKey(keyEncryptedWithPublicKey);
+
+                    //pack data
+                    MessageBundle messageBundle = new MessageBundle(keyEncryptedWithPublicKey, keyEncryptedWithPublicKeyAndPrivateKey);
+
+                    Log.w("YES", "0- PLAIN TEXT = " + messageBundle.getPlainText());
+                    Log.w("YES", "0- SIGNED TEXT = " + messageBundle.getSignedText());
+
+                    boolean isVerified = EncryptionUtil.verifyData(messageBundle.getPlainText(), messageBundle.getSignedText(), EncryptionUtil.getPublicKey());
+
+                    Log.w("YES", "*_*"+ isVerified);
+
+                    output.writeObject(messageBundle);
                     output.flush();
 
                     //return the public key
@@ -220,9 +237,9 @@ public class MainActivity extends Activity {
             }
         } catch (ClassNotFoundException classNotFoundException) {
             showToast("Unknown object type received");
-            Log.w("YES", classNotFoundException.getMessage());
+            Log.w("YES", "__" +classNotFoundException.getMessage());
         } catch (Exception e) {
-            Log.w("YES", e.getMessage());
+            Log.w("YES", "__" + e.getMessage());
         }
         return null;
     }
@@ -300,12 +317,22 @@ public class MainActivity extends Activity {
     {
         try
         {
-            //Encrypt the string using the private key
-            //String messageEncryptedPrivateKey = EncryptionUtil.signDataPrivateKey(message);
-            //Log.w("YES", "PUB KEY\n"+senderPublicKey.toString());
-            String finalMessage = EncryptionUtil.encryptDataPublicKey(message, senderPublicKey);
-            Log.w("YES", "Encrypted messaage + encoded = " + finalMessage);
-            output.writeObject(finalMessage);
+            //Encrypt the string using my private key
+            String signedText = EncryptionUtil.signDataPrivateKey(message);
+            //Log.w("YES", "SIGNED TEXT = " + signedText);
+            //pack the plain and signed messages
+            MessageBundle messageBundle = new MessageBundle(message, signedText);
+            Log.w("YES", "1- PLAIN TEXT = " + messageBundle.getPlainText());
+            Log.w("YES", "1- SIGNED TEXT = " + messageBundle.getSignedText());
+
+            //encrypt object contents using symmetric key
+            messageBundle.setPlainText(EncryptionUtil.encryptAES(messageBundle.getPlainText(), secretKey));
+            messageBundle.setSignedText(EncryptionUtil.encryptAES(messageBundle.getSignedText(), secretKey));
+
+            Log.w("YES", "2- PLAIN TEXT = " + messageBundle.getPlainText());
+            Log.w("YES", "2- SIGNED TEXT = " + messageBundle.getSignedText());
+
+            output.writeObject(messageBundle);
             output.flush();
         }
         catch ( IOException ioException )

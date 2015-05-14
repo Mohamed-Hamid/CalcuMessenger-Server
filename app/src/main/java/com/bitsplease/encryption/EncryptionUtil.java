@@ -182,9 +182,9 @@ public class EncryptionUtil {
     }
 
 
-    public static String encryptDataPublicKey(String text, PublicKey key) throws InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException, NoSuchAlgorithmException {
+    public static String encryptDataPublicKey(String text, PublicKey key) throws InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException, NoSuchAlgorithmException, NoSuchProviderException {
         byte[] cipherText = null;
-        final Cipher cipher = Cipher.getInstance(ALGORITHM);
+        final Cipher cipher = Cipher.getInstance("RSA/ECB/NoPadding", "AndroidOpenSSL");
         cipher.init(Cipher.ENCRYPT_MODE, key);
         cipherText = cipher.doFinal(text.getBytes());
         String encryptedText= new String(Base64.encode(cipherText, 0));
@@ -245,13 +245,13 @@ public class EncryptionUtil {
     }
 
 
-    public static String decryptPublicKey(String message, PrivateKey key) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchProviderException {
+    public static String decryptPrivateKey(String message) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchProviderException, CertificateException, UnrecoverableEntryException, KeyStoreException, IOException {
         byte[] dectyptedText = null;
         byte[] decodedMessage = Base64.decode(message, 0);
         // get an RSA cipher object and print the provider
         Cipher cipher = Cipher.getInstance("RSA/ECB/NoPadding", "AndroidOpenSSL");
         // decrypt the text using the private key
-        cipher.init(Cipher.DECRYPT_MODE, key);
+        cipher.init(Cipher.DECRYPT_MODE, getPrivateKey());
         dectyptedText = cipher.doFinal(decodedMessage);
         return new String(dectyptedText);
     }
